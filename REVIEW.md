@@ -19,7 +19,7 @@
   ```html
   {{ (latestResponse()?.approvedLimit ?? 0) | currency:(latestResponse()?.targetCurrency ?? 'BRL'):'symbol':'1.2-2' }}
   ```
-* **Benefício de Engenharia:** A interface formata automaticamente os valores com os símbolos apropriados (`R$` para BRL e `$` para USD) com base na resposta do backend, eliminando a ambiguidade visual em operações *cross-currency* (como no Golden Case C3).
+* **Benefício da Engenharia:** A interface formata automaticamente os valores com os símbolos apropriados (`R$` para BRL e `$` para USD) com base na resposta do backend, eliminando a ambiguidade visual em operações *cross-currency* (como no Golden Case C3).
 
 ---
 

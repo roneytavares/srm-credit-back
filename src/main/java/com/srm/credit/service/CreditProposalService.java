@@ -17,41 +17,49 @@ public class CreditProposalService {
 
     private final CreditProposalRepository repository;
 
-    // Taxa base fixa conforme os critérios do desafio: 1,00% a.m. (0.01)
+    // Taxa base fixa conforme os critérios do desafio: 1,00% a.m. (0.01)[cite: 9, 13]
     private static final BigDecimal BASE_RATE = new BigDecimal("0.01");
 
     /**
-     * Cria e precifica uma nova proposta de crédito utilizando os critérios do desafio:
-     * Fórmula: Valor Presente = Valor de Face / (1 + Taxa Base + Spread)^Prazo
-     * Arredondamento: Banker's Rounding (HALF_EVEN) em 2 casas decimais apenas no resultado final.
+     * Cria e precifica uma nova proposta de crédito com spread dinâmico e suporte a cross-currency.
      */
     @Transactional
     public CreditProposalResponse createProposal(CreditProposalRequest request) {
-        // Exemplo de spread aplicado para Duplicata Mercantil (1,5% a.m.)[cite: 3]
-        BigDecimal spread = new BigDecimal("0.015");
+        // Spread dinâmico: Cheque Pré-datado = 2.5% (0.025), Duplicata Mercantil = 1.5% (0.015)
+        String assetType = request.getAssetType() != null ? request.getAssetType() : "DUPLICATA";
+        BigDecimal spread = "CHEQUE".equalsIgnoreCase(assetType)
+                ? new BigDecimal("0.025")
+                : new BigDecimal("0.015");
 
         BigDecimal faceValue = BigDecimal.valueOf(request.getRequestedAmount());
         int termMonths = request.getTermMonths();
 
-        // Cálculo da taxa total composta: (1 + Taxa Base + Spread)
+        // Cálculo da taxa total composta: (1 + Taxa Base + Spread)[cite: 9, 13]
         BigDecimal totalRate = BigDecimal.ONE.add(BASE_RATE).add(spread);
 
-        // Aplicação da fórmula de Valor Presente com alta escala intermediária (10 casas)
+        // Aplicação da fórmula de Valor Presente com alta escala intermediária (10 casas)[cite: 13]
         BigDecimal denominator = totalRate.pow(termMonths);
         BigDecimal presentValue = faceValue.divide(denominator, 10, RoundingMode.HALF_EVEN);
 
-        // Arredondamento final: Banker's Rounding (HALF_EVEN) com 2 casas decimais[cite: 3]
+        // Arredondamento final: Banker's Rounding (HALF_EVEN) em 2 casas decimais[cite: 9, 13]
         BigDecimal approvedLimit = presentValue.setScale(2, RoundingMode.HALF_EVEN);
+
+        // Tratamento de Cross-Currency (Caso C3: conversão para USD usando a taxa de câmbio informada)[cite: 9]
+        String currency = request.getTargetCurrency() != null ? request.getTargetCurrency() : "BRL";
+        if ("USD".equalsIgnoreCase(currency) && request.getExchangeRate() != null) {
+            BigDecimal exchangeRate = BigDecimal.valueOf(request.getExchangeRate());
+            approvedLimit = approvedLimit.divide(exchangeRate, 2, RoundingMode.HALF_EVEN);
+        }
 
         // Definição do status da proposta
         String status = approvedLimit.compareTo(BigDecimal.ZERO) > 0 ? "APPROVED" : "REJECTED";
 
-        // Montagem da entidade para persistência ACID utilizando BigDecimal puro[cite: 3]
+        // Montagem da entidade para persistência ACID[cite: 13]
         CreditProposalEntity entity = CreditProposalEntity.builder()
                 .clientName(request.getClientName())
                 .requestedAmount(faceValue)
                 .termMonths(request.getTermMonths())
-                .approvedLimit(approvedLimit) // Mantém BigDecimal na entidade e no banco NUMERIC(18,2)[cite: 3]
+                .approvedLimit(approvedLimit)
                 .status(status)
                 .build();
 
@@ -61,7 +69,7 @@ public class CreditProposalService {
     }
 
     /**
-     * Consulta uma proposta de crédito cadastrada pelo ID.
+     * Consulta uma proposta de crédito cadastrada pelo ID.[cite: 13]
      */
     @Transactional(readOnly = true)
     public CreditProposalResponse findById(Long id) {
@@ -71,9 +79,7 @@ public class CreditProposalService {
     }
 
     /**
-     * Mapeia a Entidade JPA para o DTO de Resposta gerado pelo OpenAPI.
-     * (Converte para Double apenas na fronteira do DTO de saída, se exigido pelo contrato gerado,
-     * preservando a precisão interna no banco e nos cálculos).
+     * Mapeia a Entidade JPA para o DTO de Resposta gerado pelo OpenAPI.[cite: 13]
      */
     private CreditProposalResponse mapToResponse(CreditProposalEntity entity) {
         CreditProposalResponse response = new CreditProposalResponse();

@@ -1,0 +1,98 @@
+openapi: 3.0.3
+info:
+  title: SRM Credit API
+  description: API contract-first para o motor de crédito SRM
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Servidor Local de Desenvolvimento
+paths:
+  /api/v1/credits:
+    post:
+      summary: Criar simulação ou proposta de crédito
+      operationId: createCreditProposal
+      tags:
+        - Credit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditProposalRequest'
+      responses:
+        '201':
+          description: Proposta criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditProposalResponse'
+        '400':
+          description: Dados inválidos fornecidos na requisição
+
+  /api/v1/credits/{id}:
+    get:
+      summary: Consultar proposta de crédito por ID
+      operationId: getCreditProposalById
+      tags:
+        - Credit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Proposta encontrada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditProposalResponse'
+        '404':
+          description: Proposta não encontrada
+
+components:
+  schemas:
+    CreditProposalRequest:
+      type: object
+      required:
+        - clientName
+        - requestedAmount
+        - termMonths
+      properties:
+        clientName:
+          type: string
+          example: "Empresa Exemplo S.A."
+        requestedAmount:
+          type: number
+          format: double
+          example: 50000.00
+        termMonths:
+          type: integer
+          example: 12
+
+    CreditProposalResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        clientName:
+          type: string
+          example: "Empresa Exemplo S.A."
+        requestedAmount:
+          type: number
+          format: double
+          example: 50000.00
+        termMonths:
+          type: integer
+          example: 12
+        approvedLimit:
+          type: number
+          format: double
+          example: 45000.00
+        status:
+          type: string
+          example: "APPROVED"

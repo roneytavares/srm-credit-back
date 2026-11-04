@@ -6,6 +6,7 @@ info:
 servers:
   - url: http://localhost:8080
     description: Servidor Local de Desenvolvimento
+
 paths:
   /api/v1/credits:
     post:
@@ -63,14 +64,27 @@ components:
       properties:
         clientName:
           type: string
-          example: "Empresa Exemplo S.A."
+          example: "SRM Cedente Teste S.A."
         requestedAmount:
           type: number
           format: double
-          example: 50000.00
+          example: 100000.00
         termMonths:
           type: integer
-          example: 12
+          example: 6
+        assetType:
+          type: string
+          example: "DUPLICATA"
+          description: "Tipo de ativo: DUPLICATA ou CHEQUE"
+        targetCurrency:
+          type: string
+          example: "BRL"
+          description: "Moeda de liquidação: BRL ou USD"
+        exchangeRate:
+          type: number
+          format: double
+          example: 5.4321
+          description: "Taxa de câmbio BRL/USD para operações cross-currency"
 
     CreditProposalResponse:
       type: object
@@ -81,18 +95,18 @@ components:
           example: 1
         clientName:
           type: string
-          example: "Empresa Exemplo S.A."
+          example: "SRM Cedente Teste S.A."
         requestedAmount:
           type: number
           format: double
-          example: 50000.00
+          example: 100000.00
         termMonths:
           type: integer
-          example: 12
+          example: 6
         approvedLimit:
           type: number
           format: double
-          example: 45000.00
+          example: 86229.69
         status:
           type: string
           example: "APPROVED"

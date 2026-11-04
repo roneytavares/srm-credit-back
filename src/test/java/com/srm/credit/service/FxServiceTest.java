@@ -14,7 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(classes = SrmCreditApplication.class)
-@ActiveProfiles("local") // <--- Força o carregamento do application-local.yml com as configs do Circuit Breaker
+@ActiveProfiles("test") // <--- Força o carregamento do application-local.yml com as configs do Circuit Breaker
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class FxServiceTest {
 
